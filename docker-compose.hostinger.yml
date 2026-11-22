@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: odoo-hub-website02
+    ports:
+      - "3000:3000"
+
+    # Volume mappings for Hostinger persistent storage
+    volumes:
+      # App data storage
+      - /docker/website02/data:/app/data
+      # Optional: logs storage
+      - /docker/website02/logs:/app/logs
+      # Node modules cache (optional but recommended)
+      - /docker/website02/node_modules:/app/node_modules
+
+    environment:
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+      # NextAuth
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+
+      # Odoo Configuration
+      ODOO_URL: ${ODOO_URL}
+      ODOO_DATABASE: ${ODOO_DATABASE}
+      ODOO_USERNAME: ${ODOO_USERNAME}
+      ODOO_PASSWORD: ${ODOO_PASSWORD}
+
+      # Node Environment
+      NODE_ENV: production
+
+      # Data paths
+      DATA_PATH: /docker/website02/data
+      LOGS_PATH: /docker/website02/logs
+
+    restart: always
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        labels: "app=website02"
+
+    # Resource limits optimized for Hostinger
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+    # Network
+    networks:
+      - website02-network
+
+    # Additional security settings
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  app-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /docker/website02/data
+
+  app-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /docker/website02/logs
+
+networks:
+  website02-network:
+    driver: bridge
+    name: website02-network

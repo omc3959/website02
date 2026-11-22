@@ -1,4 +1,4 @@
-.PHONY: help build up down logs shell deploy dev-install dev-run clean
+.PHONY: help build up down logs shell deploy dev-install dev-run clean hostinger-setup hostinger-up hostinger-down hostinger-logs hostinger-restart hostinger-status
 
 help:
 	@echo "OdooHub - Available Commands"
@@ -8,13 +8,21 @@ help:
 	@echo "  make dev-install    Install dependencies locally"
 	@echo "  make dev-run        Run locally with npm"
 	@echo ""
-	@echo "Docker:"
+	@echo "Docker (Local):"
 	@echo "  make build          Build Docker image"
 	@echo "  make up             Start containers"
 	@echo "  make down           Stop containers"
 	@echo "  make logs           Show container logs"
 	@echo "  make shell          Enter application shell"
 	@echo "  make restart        Restart containers"
+	@echo ""
+	@echo "Hostinger/VPS:"
+	@echo "  make hostinger-setup    Setup Hostinger environment"
+	@echo "  make hostinger-up       Start on Hostinger"
+	@echo "  make hostinger-down     Stop on Hostinger"
+	@echo "  make hostinger-logs     Show Hostinger logs"
+	@echo "  make hostinger-restart  Restart on Hostinger"
+	@echo "  make hostinger-status   Check Hostinger status"
 	@echo ""
 	@echo "Deployment:"
 	@echo "  make deploy         Full deployment (build + up)"
@@ -94,6 +102,46 @@ env:
 health:
 	@echo "Checking application health..."
 	@docker-compose exec -T web curl -s http://localhost:3000 > /dev/null && echo "✓ Application is running" || echo "✗ Application is not responding"
+
+# Hostinger/VPS specific commands
+hostinger-setup:
+	@echo "Setting up Hostinger environment..."
+	@chmod +x hostinger-setup.sh
+	@sudo ./hostinger-setup.sh
+
+hostinger-up:
+	docker-compose -f docker-compose.hostinger.yml up -d
+
+hostinger-down:
+	docker-compose -f docker-compose.hostinger.yml down
+
+hostinger-logs:
+	docker-compose -f docker-compose.hostinger.yml logs -f web
+
+hostinger-restart:
+	docker-compose -f docker-compose.hostinger.yml restart
+
+hostinger-status:
+	docker-compose -f docker-compose.hostinger.yml ps
+
+hostinger-build:
+	docker-compose -f docker-compose.hostinger.yml build --no-cache
+
+hostinger-deploy: hostinger-build hostinger-up
+	@echo "Deployment to Hostinger complete!"
+
+hostinger-logs-tail:
+	docker-compose -f docker-compose.hostinger.yml logs --tail=100 web
+
+hostinger-backup:
+	@echo "Creating backup..."
+	@tar -czf website02-backup-$(shell date +%Y%m%d-%H%M%S).tar.gz /docker/website02/
+	@echo "Backup created successfully!"
+
+hostinger-clean-logs:
+	@echo "Cleaning logs..."
+	@rm -f /docker/website02/logs/*.log
+	@echo "Logs cleaned!"
 
 check-env:
 	@echo "Checking environment variables..."
