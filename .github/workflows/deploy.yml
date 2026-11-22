@@ -1,0 +1,32 @@
+
+name: Deploy Website to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: website2-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Hostinger VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy website
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || '22' }}
+          script: |
+            set -e
+            cd /docker/website2
+            docker compose build website
+            docker compose up -d --no-build website
+            echo "Website deployment completed successfully."
