@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
       "./node_modules/postgres-bytea/**/*",
       "./node_modules/postgres-date/**/*",
       "./node_modules/postgres-interval/**/*",
+      "./node_modules/xtend/**/*",
     ],
   },
 
